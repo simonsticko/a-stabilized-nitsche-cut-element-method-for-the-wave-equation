@@ -1,6 +1,6 @@
 #Dont' want to include files containing results
-.mat
-.avi
+*.mat
+*.avi
 results/
 safeCopy/
 Obsolete/
