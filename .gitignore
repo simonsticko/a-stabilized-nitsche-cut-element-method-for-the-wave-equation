@@ -1,0 +1,3 @@
+#Dont' want to include files containing results
+.mat
+.avi
