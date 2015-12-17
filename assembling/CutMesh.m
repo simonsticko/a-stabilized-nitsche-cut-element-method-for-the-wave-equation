@@ -69,6 +69,15 @@ classdef CutMesh<handle
                 tri=this.dt.ConnectivityList(outside,:);
             end
         end
+        
+        function[]=plot(this)
+            hold on;
+           for j=1:length(this.Xcut)
+               xCut=this.Xcut{j};
+               plot(xCut(:,1),xCut(:,2),'b-');
+           end
+           hold off;
+        end
     end
     
     methods(Access=private)
