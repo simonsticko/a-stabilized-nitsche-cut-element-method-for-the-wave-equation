@@ -69,9 +69,9 @@ end
 
 %Assembles over the inside of the domain.
 function[m,B,bLoad,lagrange]=assembleOverInside(cutMesh,f)
-X=cutMesh.dt.Points();
+X=cutMesh.dt.Points(:,:);
 %Total numer of nodes in the system.
-nNodes=size(cutMesh.dt.Points(),1);
+nNodes=size(cutMesh.dt.Points(:,:),1);
 %Preallocate.
 m=sparse(nNodes,nNodes);
 B=sparse(nNodes,nNodes);

@@ -11,7 +11,7 @@
 %L=bLoad+(H+gammaN*h*G);
 function[m,a,L,lagrange]=...
     assembleOverIntersected(cutMesh,f,g,dirichlet,gammaD,gammaN)
-X=cutMesh.dt.Points();
+X=cutMesh.dt.Points(:,:);
 nNodes=size(X,1);
 %Preallocate.
 m=sparse(nNodes,nNodes);
