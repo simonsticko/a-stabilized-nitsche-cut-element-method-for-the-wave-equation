@@ -13,6 +13,10 @@ classdef CutMesh<handle
         %Each column of Xcut defines the x and y coordinates of the
         %polygon. The first 2 points are located on the boundary.
         Xcut;
+        %cell of the size #outer edges in the background mesh. If these
+        %edges are intersected, contain the endpoints of the line which is
+        %outside the polygon.
+        XOuterBoundary;
         %Faces of the elements that are intersected or cut by the boundary.
         assocFaces;
         %logical array defining which nodes are relevant for the
@@ -32,6 +36,9 @@ classdef CutMesh<handle
         %Logical array describing which triangles are intersected by the 
         %boundary XB.
         intersected;
+        %Logical arrays describing which edges are outside or intersected.
+        edgeOutside;
+        edgeIntersected;
     end
     
     methods(Access=public)
@@ -50,6 +57,7 @@ classdef CutMesh<handle
             createBoundaryAssociatedFaces(this,haveInnerProblem);
             calculateRelevant(this,haveInnerProblem);
             calculateOuterNodes(this)
+            createFreeBoundary(this,XB);
             this.haveInnerProb=haveInnerProblem;            
         end
                 
@@ -119,6 +127,55 @@ classdef CutMesh<handle
             this.h=2*max(r);
         end
         
+        %Loop through all boundary faces of the background triangulation.
+        %Determine intersection points and store these in XouterBoundary.
+        function[]=createFreeBoundary(this,XB)
+            freeBackground=this.dt.freeBoundary;
+            this.edgeOutside=false(size(freeBackground,1));
+            this.edgeIntersected=false(size(freeBackground,1));
+            this.XOuterBoundary=cell(size(freeBackground,1));
+            for j=1:size(freeBackground,1)
+                Xface=this.dt.Points(freeBackground(j,:),:);
+                isOutside=~inpolygon(Xface(:,1),Xface(:,2),XB(:,1),XB(:,2));
+                if(isOutside(1) && isOutside(2))
+                    this.edgeOutside(j)=true;
+                elseif(isOutside(1)~=isOutside(2))
+                    this.edgeIntersected(j)=true;
+                    [xIsec,yIsec] = polyxpoly(XB([1:end 1],1),XB([1:end 1],2),...
+                        Xface(:,1), Xface(:,2),'unique');
+                    Xisec=[xIsec,yIsec];
+                    Xfree=[Xface(isOutside,:);Xisec];
+                    %Make sure the ordering corresponds to an outward
+                    %facing normal.
+                    if(isOutside(2))
+                        Xfree=flipud(Xfree);
+                    end
+                    this.XOuterBoundary{j}=Xfree;
+                end
+            end
+            %plot for debugging
+%             figure();
+%             hold on;
+%             for j=1:size(freeBackground,1)
+%                 edge=freeBackground(j,:);
+%                 if(this.edgeOutside(j))
+%                     Xedge=this.dt.Points(edge,:);
+%                     plot(Xedge(:,1),Xedge(:,2));
+%                 elseif(this.edgeIntersected(j))
+%                     Xedge=this.XOuterBoundary{j};
+%                     plot(Xedge(:,1),Xedge(:,2));       
+%                 end
+%                 XA=Xedge(1,:);
+%                 XB=Xedge(2,:);
+%                 XBA=XB-XA;
+%                 L=norm(XBA);
+%                 normal=[XBA(2) -XBA(1)]/L;
+%                 XC=.5*(XA+XB);
+%                 quiver(XC(1),XC(2),normal(1),normal(2));
+%             end
+        end
+        
+        
         %Calculates the cell-array Xcut defining the cut-cells.
         function[]=checkIntersection(this,XB,haveInnerProblem)
             Xcenter=mean(XB);
@@ -174,6 +231,8 @@ classdef CutMesh<handle
             %The boundary faces of FG are the boundary faces of the
             %trFreeBoundary
             outerFaces=trFreeBoundary.freeBoundary;
+            %Exlude outerfaces of the whole mesh
+            outerFaces=[outerFaces;this.dt.freeBoundary];
             %take into account that one the boundary faces could be ordered
             %[1 2] and not [2 1].
             outerFaces=[outerFaces;fliplr(outerFaces)];
