@@ -37,7 +37,7 @@ function[M,A,L,LOut,lagrange,m,a]=assemble(cutMesh,f,gcSq,dirichletInner,gOutcSq
 gamma1=.5;
 gammaM=.25;
 gammaD=5;
-gammaN=5;
+gammaN=0;
 if(nargin<5)
    gOutcSq=@(x,y) zeros(size(x));
    dirichletOuter=true; 
