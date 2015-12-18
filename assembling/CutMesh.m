@@ -27,6 +27,9 @@ classdef CutMesh<handle
         %Boolean describing if we are trying to solve an inner or outer
         %problem.
         haveInnerProb;
+        %Logical arrays describing which edges are outside or intersected.
+        edgeOutside;
+        edgeIntersected;
     end
     
     properties(Access=private)
@@ -36,9 +39,6 @@ classdef CutMesh<handle
         %Logical array describing which triangles are intersected by the 
         %boundary XB.
         intersected;
-        %Logical arrays describing which edges are outside or intersected.
-        edgeOutside;
-        edgeIntersected;
     end
     
     methods(Access=public)

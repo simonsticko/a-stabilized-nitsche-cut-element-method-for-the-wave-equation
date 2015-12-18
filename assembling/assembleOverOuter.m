@@ -10,22 +10,27 @@ G=zeros(nNodes,1);
 H=zeros(nNodes,1);
 for j=1:size(edges,1)
     edge=edges(j,:);
-    Xedge=cutMesh.dt.Points(edge,:);
-    %Want to now which triangle this edge is attached to.
-    attachment=cutMesh.dt.edgeAttachments(edge);
-    attachment=attachment{:};
-    %Triangle which this cell belongs to.
-    loc2glb=cutMesh.dt.ConnectivityList(attachment,:);
-    Xelem=cutMesh.dt.Points(loc2glb,:);
-    [a,b,c]=getPhi(Xelem(:,1),Xelem(:,2));
-    phiAB=a*ones(1,2)+b*Xedge(:,1)'+c*Xedge(:,2)';
-    [CLoc,DLoc,ELoc,GLoc,HLoc]=get1DQuantities(Xedge,a,b,c,phiAB,gD);
-    %Map local 2 global.
-    C(loc2glb,loc2glb)=C(loc2glb,loc2glb)+CLoc;
-    D(loc2glb,loc2glb)=D(loc2glb,loc2glb)+DLoc;
-    E(loc2glb,loc2glb)=E(loc2glb,loc2glb)+ELoc;
-    G(loc2glb)=G(loc2glb)+GLoc;
-    H(loc2glb)=H(loc2glb)+HLoc;
+    if(cutMesh.edgeOutside(j) || cutMesh.edgeIntersected(j))
+        Xedge=cutMesh.dt.Points(edge,:);
+        if(cutMesh.edgeIntersected(j))
+            Xedge=cutMesh.XOuterBoundary{j};
+        end
+        %Want to now which triangle this edge is attached to.
+        attachment=cutMesh.dt.edgeAttachments(edge);
+        attachment=attachment{:};
+        %Triangle which this cell belongs to.
+        loc2glb=cutMesh.dt.ConnectivityList(attachment,:);
+        Xelem=cutMesh.dt.Points(loc2glb,:);
+        [a,b,c]=getPhi(Xelem(:,1),Xelem(:,2));
+        phiAB=a*ones(1,2)+b*Xedge(:,1)'+c*Xedge(:,2)';
+        [CLoc,DLoc,ELoc,GLoc,HLoc]=get1DQuantities(Xedge,a,b,c,phiAB,gD);
+        %Map local 2 global.
+        C(loc2glb,loc2glb)=C(loc2glb,loc2glb)+CLoc;
+        D(loc2glb,loc2glb)=D(loc2glb,loc2glb)+DLoc;
+        E(loc2glb,loc2glb)=E(loc2glb,loc2glb)+ELoc;
+        G(loc2glb)=G(loc2glb)+GLoc;
+        H(loc2glb)=H(loc2glb)+HLoc;
+    end
 end
 h=cutMesh.h;
 L=(gammaD/h*H-G)*dirichlet+(H+gammaN*h*G)*(~dirichlet);

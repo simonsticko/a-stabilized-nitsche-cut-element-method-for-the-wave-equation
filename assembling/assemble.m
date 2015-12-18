@@ -32,7 +32,7 @@
 %solving and outer problem, for the outer problem g will be the inner
 %boundary condition, for an inner problem this is the only boundary
 %condition.
-function[M,A,L,LOut,lagrange]=assemble(cutMesh,f,gcSq,dirichletInner,gOutcSq,dirichletOuter)
+function[M,A,L,LOut,lagrange,m,a]=assemble(cutMesh,f,gcSq,dirichletInner,gOutcSq,dirichletOuter)
 %Penallty constants.
 gamma1=.5;
 gammaM=.25;
