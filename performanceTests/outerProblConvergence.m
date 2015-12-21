@@ -10,7 +10,7 @@ path=['results/outerProbl/' folderName '/'];
 mkdir(path);
 %n is "fineness" in space want to start with the most computational heavy
 %simulation therefore flipud
-n=flipud(2.^(3:9)');
+n=flipud(2.^(3:4));%flipud(2.^(3:7)');
 Tend=1;
 %Return error, want to save them.
 h=zeros(size(n));

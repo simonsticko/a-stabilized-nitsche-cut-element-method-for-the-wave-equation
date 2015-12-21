@@ -1,8 +1,8 @@
 function[]=sliverTimeStep()
 addpath('assembling')
 resultdir='results/timestep/';
-n=[20,40];
-epsilon=linspace(.5,.7,5);
+n=[7,40];
+epsilon=linspace(.7,.7,5);
 h=zeros(length(n),1);
 stabilized=zeros(length(n),length(epsilon));
 unstabilized=zeros(size(stabilized));

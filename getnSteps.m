@@ -5,7 +5,7 @@ function[dt,nSteps]=getnSteps(cfl,c,T,n,domainSize)
 %approximative mesh size.
 h=domainSize./n;
 %maximum timestep
-dtMax=cfl*h/c;
+dtMax=cfl*h/c/sqrt(2);
 %choose nSteps so that dt is smaller than dtMax.
 nSteps=ceil(T./dtMax)+1;
 dt=T./(nSteps-1);
