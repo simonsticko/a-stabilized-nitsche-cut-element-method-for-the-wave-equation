@@ -10,7 +10,7 @@ path=['results/outerProbl/' folderName '/'];
 mkdir(path);
 %n is "fineness" in space want to start with the most computational heavy
 %simulation therefore flipud
-n=flipud(2.^(3:7));
+n=flipud(2.^(3:9)');
 Tend=1;
 %Return error, want to save them.
 h=zeros(size(n));
@@ -26,15 +26,15 @@ for j=1:length(n)
 end
 save([path 'savedData' '.mat']);
 %error in u
-yLab='$\left\Vert  u_{h}-u \right\Vert $';
+yLab='$\left\Vert  u_{h}-u \right\Vert_{\Omega} $';
 expectedSlope=2;
 plotAndSave(h,uError,yLab,path,expectedSlope);
 %error in grad
-yLab='$\left\Vert \nabla( u_{h}-u )\right\Vert$';
+yLab='$\left\Vert \nabla( u_{h}-u )\right\Vert_{\Omega}$';
 expectedSlope=1;
 plotAndSave(h,gradError,yLab,path,expectedSlope);
 %dudt
-yLab='$\left\Vert \dot{u}_{h}-\dot{u}\right\Vert$';
+yLab='$\left\Vert \dot{u}_{h}-\dot{u}\right\Vert_{\Omega}$';
 expectedSlope=2;
 plotAndSave(h,dudtError,yLab,path,expectedSlope);
 %boundary error
@@ -43,14 +43,4 @@ expectedSlope=1;
 plotAndSave(h,bcError,yLab,path,expectedSlope);
 end
 
-%Resizes and saves figure.
-function[]=plotAndSave(h,error,yLab,path,expectedSlope)
-fig=figure();
-name=inputname(2);
-color='b';
-plotLogarithmic(h,error,'h',yLab,expectedSlope,color);
-resizeFig();
-fixPaperSize();
-saveas(figure(fig),[path name '.fig'],'fig');
-saveas(figure(fig),[path name '.pdf'],'pdf');
-end
+

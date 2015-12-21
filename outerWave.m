@@ -30,8 +30,8 @@ c=1;
 %Radius of immersed disc.
 R=1;
 %Width of domain.
-Dwidth=2.1*R;
-cfl=0.05;
+Dwidth=2.11*R;
+cfl=0.9;
 [dt,nSteps]=getnSteps(cfl,c,T,nMax,2*Dwidth);
 %parameter for analytic solution.
 gamma=pi;

@@ -10,7 +10,7 @@ path=['results/waveDirichlet/' folderName '/'];
 mkdir(path);
 %n is "fineness" in space want to start with the most computational heavy
 %simulation therefore flipud
-n=flipud(2.^(3:7));
+n=flipud(2.^(3:7)');
 nPeriods=1.125;
 h=zeros(size(n));
 uError=zeros(size(n));
@@ -31,7 +31,7 @@ color='b';
 %Plot errror
 figure(1);
 hold on;
-yLab='$\left\Vert  u_{h}-u \right\Vert $';
+yLab='$\left\Vert  u_{h}-u \right\Vert_{\Omega} $';
 expectedSlope=2;
 plotLogarithmic(h,uError,'h',yLab,expectedSlope,color);
 fixAndSave(path,'L2Error');
@@ -60,14 +60,14 @@ fixAndSave(path,'maxError');
 %Plot gradient error
 figure(5);
 hold on;
-yLab='$\left\Vert \nabla( u_{h}-u )\right\Vert$';
+yLab='$\left\Vert \nabla( u_{h}-u )\right\Vert_{\Omega}$';
 expectedSlope=1;
 plotLogarithmic(h,gradError,'h',yLab,expectedSlope,color);
 fixAndSave(path,'gradError');
 %Plot dudtError
 figure(6);
 hold on;
-yLab='$\left\Vert \dot{u}_{h}-\dot{u}\right\Vert$';
+yLab='$\left\Vert \dot{u}_{h}-\dot{u}\right\Vert_{\Omega}$';
 expectedSlope=2;
 plotLogarithmic(h,dudtError,'h',yLab,expectedSlope,color);
 fixAndSave(path,'dudtError');
