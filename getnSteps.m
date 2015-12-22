@@ -3,9 +3,9 @@
 %end time, n is number of gridpoints over the length domainSize.
 function[dt,nSteps]=getnSteps(cfl,c,T,n,domainSize)
 %approximative mesh size.
-h=domainSize./n;
+h=domainSize./(n-1);
 %maximum timestep
-dtMax=cfl*h/c/sqrt(2);
+dtMax=cfl*h/c;
 %choose nSteps so that dt is smaller than dtMax.
 nSteps=ceil(T./dtMax)+1;
 dt=T./(nSteps-1);
