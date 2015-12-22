@@ -10,7 +10,7 @@ path=['results/outerProbl/' folderName '/'];
 mkdir(path);
 %n is "fineness" in space want to start with the most computational heavy
 %simulation therefore flipud
-n=flipud(2.^(3:4));%flipud(2.^(3:7)');
+n=flipud(2.^(3:9)');
 Tend=1;
 %Return error, want to save them.
 h=zeros(size(n));
@@ -22,7 +22,7 @@ for j=1:length(n)
     disp(['started with j=' num2str(j) ', time=']);
     disp(num2str(clock()));
     [h(j),uError(j),gradError(j),dudtError(j),bcError(j)]=...
-        outerWave(n(j),Tend,max(n),false);
+        outerWave(n(j),Tend,max(n),false)
 end
 save([path 'savedData' '.mat']);
 %error in u

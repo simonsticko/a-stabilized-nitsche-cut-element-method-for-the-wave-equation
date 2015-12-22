@@ -10,7 +10,7 @@ path=['results/waveDirichlet/' folderName '/'];
 mkdir(path);
 %n is "fineness" in space want to start with the most computational heavy
 %simulation therefore flipud
-n=flipud(2.^(3:7)');
+n=flipud(2.^(3:9)');
 nPeriods=1.125;
 h=zeros(size(n));
 uError=zeros(size(n));
