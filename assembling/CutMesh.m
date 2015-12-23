@@ -123,11 +123,7 @@ classdef CutMesh<handle
             [Xm,Ym]=meshgrid(x,y);
             this.dt=delaunayTriangulation(Xm(:), Ym(:));
             %Mesh parameter, incircle diameter.
-            a=diff(x(1:2));
-            b=diff(y(1:2));
-            c=sqrt(a^2+b^2);
-            radius=a*b/(a+b+c);
-            this.h=2*radius;
+            this.h=min(diff(x(1:2)),diff(y(1:2)));
         end
         
         %Loop through all boundary faces of the background triangulation.
