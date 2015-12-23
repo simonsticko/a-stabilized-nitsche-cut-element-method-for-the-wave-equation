@@ -32,11 +32,11 @@
 %solving and outer problem, for the outer problem g will be the inner
 %boundary condition, for an inner problem this is the only boundary
 %condition.
-function[M,A,L,LOut,lagrange,m,a]=assemble(cutMesh,f,gcSq,dirichletInner,gOutcSq,dirichletOuter)
+function[M,A,L,LOut,lagrange,m,a,J]=assemble(cutMesh,f,gcSq,dirichletInner,gOutcSq,dirichletOuter)
 %Penallty constants.
-gamma1=.5;
 gammaM=.25;
-gammaD=5;
+gamma1=.5;%suggested in Cut-elements II burman hansbo
+gammaD=5;%used in burman-hansbo
 gammaN=0;
 if(nargin<5)
    gOutcSq=@(x,y) zeros(size(x));
