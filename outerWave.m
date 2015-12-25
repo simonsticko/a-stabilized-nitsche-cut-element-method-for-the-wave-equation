@@ -31,7 +31,7 @@ c=1;
 R=1;
 %Width of domain.
 Dwidth=2.11*R;
-cfl=0.6;
+cfl=0.4;
 [dt,nSteps]=getnSteps(cfl,c,T,nMax,2*Dwidth);
 %parameter for analytic solution.
 gamma=pi;

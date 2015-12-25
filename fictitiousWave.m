@@ -55,7 +55,7 @@ dudt0=zeros(size(u0));
 L=@(t) L;
 %Need to now the period of the problem to determine the timestep.
 [~,T]=u0Analy(0,0);
-cfl=0.6;
+cfl=0.4;
 [dt,nSteps]=getnSteps(cfl,c,T*nPeriods,nMax,diff(xLim));
 %solve;
 [u,dudt,t]=timeStepRK(u0,dudt0,A,M,L,nSteps,dt,c);

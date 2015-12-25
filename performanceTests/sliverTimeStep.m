@@ -1,4 +1,4 @@
-function[]=sliverTimeStep()
+function[folderName]=sliverTimeStep()
 addpath('assembling')
 cclock=clock();
 folderName=[num2str(cclock(1)) '_' num2str(cclock(2)) '_' num2str(cclock(3)) '_' ...
