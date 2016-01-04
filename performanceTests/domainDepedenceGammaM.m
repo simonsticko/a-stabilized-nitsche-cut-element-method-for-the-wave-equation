@@ -44,7 +44,7 @@ save([folderName 'saveddata.mat']);
 %plot minimum.
 fig=figure();
 plot(axisRatio,minGammaM,'bo')
-xlabel('$a/b$','interpreter','latex');
+xlabel('$b/a$','interpreter','latex');
 ylabel('$\arg \min_{\gamma_M} cond(m+\gamma_M h^2 J)$','interpreter','latex');
 resizeFig(16);
 fixPaperSize();
