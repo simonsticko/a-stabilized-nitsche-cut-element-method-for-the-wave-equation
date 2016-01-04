@@ -6,9 +6,8 @@ folderName=[num2str(cclock(2)) '_' num2str(cclock(3)) '_' ...
     num2str(cclock(4)) '_' num2str(cclock(5))];
 folder=['results/domainGammaM/' folderName '/'];
 mkdir(folder);
-nOnce=2^5;
-plotMinOnce(folder,nOnce);
 n=2^7;
+plotMinOnce(folder,n);
 findMinOnAxisRatio(n,folder)
 end
 
