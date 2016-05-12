@@ -82,7 +82,8 @@ classdef CutMesh<handle
             hold on;
            for j=1:length(this.Xcut)
                xCut=this.Xcut{j};
-               plot(xCut(:,1),xCut(:,2),'b-');
+               closed=[xCut;xCut(1,:)];
+               plot(closed(:,1),closed(:,2),'b-');
            end
            hold off;
         end
