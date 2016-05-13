@@ -1,4 +1,4 @@
-function[h,uError,gradError,dudtError,boundaryError]=halfperiodic(n,nMax,saveSolution)
+function[t,u,dudt,cutMesh,xLim,yLim]=halfperiodic(n,nMax,c,waveNumber,nPeriods,saveSolution)
 if(nargin<1)
     n=22;
     nMax=n;
@@ -7,36 +7,24 @@ end
 addpath analyticFunctions/plane;
 addpath assembling/;
 addpath errorCalculation;
-waveNumber=2*pi/3;
 xLim=[-1.5,1.5];
 [cutMesh,yLim]=createMesh(xLim,n);
 nodes=create_sets(cutMesh);
-c=1;
-uConst=0;
-uAnaly=@(x,y,t) planeWave(x,y,t,waveNumber,c);
-dudtAnaly=@(x,y,t) dplaneWavedt(x,y,t,waveNumber,c);
 [M,A,L,u0,du0dt]=createSystem(cutMesh,nodes,c,waveNumber);
 cfl=0.4;
 domainWidth=diff(xLim);
 periodTime=2*pi/(waveNumber*c);
-nPeriods=1;
 endTime=periodTime*nPeriods;
 [dt,nSteps]=getnSteps(cfl,c,endTime,nMax,domainWidth);
 [u,dudt,t]=timeStepRK(u0,du0dt,A,M,L,nSteps,dt,c);
 u=convertToFull(u,nodes);
 dudt=convertToFull(dudt,nodes);
 if(saveSolution)
+    uConst=0;
     saveName=['periodic_' '.mat'];
     save(saveName,'t','u','dudt','cutMesh','xLim','yLim','c',...
         'dt','uConst');
 else
-    uAnalyticEnd=@(x,y) uAnaly(x,y,endTime);
-    dudtAnalyticEnd=@(x,y) dudtAnaly(x,y,endTime);
-    graduAnalyEnd=@(x,y) gradPlaneWave(x,y,endTime,waveNumber,c);
-    [uError,gradError,dudtError,boundaryError]=calculateErrors(...
-        cutMesh,u(:,end),dudt(:,end),xLim,yLim,...
-        uAnalyticEnd,dudtAnalyticEnd,graduAnalyEnd);
-    h=cutMesh.h;
 end
 end
 
@@ -146,25 +134,3 @@ toKeep(leftBoundary)=false;
 internalNodes=allNodes(toKeep);
 end
 
-function[uError,gradError,dudtError,boundaryError]=calculateErrors(...
-    cutMesh,uEnd,dudtEnd,xLim,yLim,uAnaly,dudtAnaly,graduAnaly)
-uConst=0;
-uInterpol=uInterpolator(cutMesh.dt,uEnd,dudtEnd,cutMesh.relevant,uConst);
-AbsTol=1E-3;
-RelTol=1E-2;
-%Error in u.
-integrand=@(x,y) (uAnaly(x,y)-uInterpol.evaluate(x,y)).^2;
-uError=sqrt(integral2(integrand,xLim(1),xLim(2),yLim(1),yLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
-%Error in dudt
-integranddudt=@(x,y) (dudtAnaly(x,y)-uInterpol.evaluatedudt(x,y)).^2;
-dudtError=sqrt(integral2(integranddudt,xLim(1),xLim(2),yLim(1),yLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
-%Error in grad
-gradIntegrand=@(x,y) gradDiffSq(x,y,graduAnaly,@(xx,yy) uInterpol.evaluategrad(xx,yy));
-gradError=sqrt(integral2(gradIntegrand,xLim(1),xLim(2),yLim(1),yLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
-%Calculate errors on the boundary
-normal=[0;1];
-upperLine=@(x) (uInterpol.evaluategrad(x,ones(size(x))*yLim(2))*normal ).^2;
-lowerLine=@(x) (uInterpol.evaluategrad(x,ones(size(x))*yLim(1))*normal ).^2;
-boundaryIntegrand=@(x) upperLine(x)'+lowerLine(x)';
-boundaryError=sqrt(integral(boundaryIntegrand,xLim(1),xLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
-end
