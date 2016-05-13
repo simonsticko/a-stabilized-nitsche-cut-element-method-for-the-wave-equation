@@ -49,7 +49,12 @@ end
 %Stabilizing term.
 J=assembleOverAssociatedFaces(cutMesh);
 %Boundary condition for outer problem:
-[aOut,LOut]=assembleOverOuter(cutMesh,gOutcSq,dirichletOuter,gammaD,gammaN);
+if(cutMesh.haveInnerProb)
+    aOut=sparse(size(aInside,1),size(aInside,2));
+    LOut=zeros(size(LInside));
+else
+    [aOut,LOut]=assembleOverOuter(cutMesh,gOutcSq,dirichletOuter,gammaD,gammaN);
+end
 %get nodes which is relevant for the calculation.
 relevant=cutMesh.relevant;
 %Add the contributions from the inner, intersected and outer assembling.

@@ -1,38 +1,57 @@
-function[]=halfperiodic()
+function[h,uError,gradError,dudtError,boundaryError]=halfperiodic(n,nMax,saveSolution)
+if(nargin<1)
+    n=22;
+    nMax=n;
+    saveSolution=true;
+end
 addpath analyticFunctions/plane;
 addpath assembling/;
-n=20;
-epsilon=.5;
+addpath errorCalculation;
 waveNumber=2*pi/3;
 xLim=[-1.5,1.5];
-yLim=xLim;
+[cutMesh,yLim]=createMesh(xLim,n);
+nodes=create_sets(cutMesh);
+c=1;
+uConst=0;
+uAnaly=@(x,y,t) planeWave(x,y,t,waveNumber,c);
+dudtAnaly=@(x,y,t) dplaneWavedt(x,y,t,waveNumber,c);
+[M,A,L,u0,du0dt]=createSystem(cutMesh,nodes,c,waveNumber);
+cfl=0.4;
+domainWidth=diff(xLim);
+periodTime=2*pi/(waveNumber*c);
+nPeriods=1;
+endTime=periodTime*nPeriods;
+[dt,nSteps]=getnSteps(cfl,c,endTime,nMax,domainWidth);
+[u,dudt,t]=timeStepRK(u0,du0dt,A,M,L,nSteps,dt,c);
+u=convertToFull(u,nodes);
+dudt=convertToFull(dudt,nodes);
+if(saveSolution)
+    saveName=['periodic_' '.mat'];
+    save(saveName,'t','u','dudt','cutMesh','xLim','yLim','c',...
+        'dt','uConst');
+else
+    uAnalyticEnd=@(x,y) uAnaly(x,y,endTime);
+    dudtAnalyticEnd=@(x,y) dudtAnaly(x,y,endTime);
+    graduAnalyEnd=@(x,y) gradPlaneWave(x,y,endTime,waveNumber,c);
+    [uError,gradError,dudtError,boundaryError]=calculateErrors(...
+        cutMesh,u(:,end),dudt(:,end),xLim,yLim,...
+        uAnalyticEnd,dudtAnalyticEnd,graduAnalyEnd);
+    h=cutMesh.h;
+end
+end
+
+function[cutMesh,yDomainLim]=createMesh(xLim,n)
+yMeshLim=xLim;
 H=diff(xLim)/(n-1);
+epsilon=.5;
 xPolygon=[-2;2];
-yPolygon=[yLim(1)+epsilon*H;yLim(2)-epsilon*H];
-[xB,yB]=meshgrid(xPolygon,yPolygon);
+yDomainLim=[yMeshLim(1)+epsilon*H;yMeshLim(2)-epsilon*H];
+[xB,yB]=meshgrid(xPolygon,yDomainLim);
 order=convhull(xB,yB);
 XB=[xB(:),yB(:)];
 XB=XB(order,:);
 haveInnerProblem=true;
-cutMesh=CutMesh(xLim,yLim,n,XB,haveInnerProblem);
-h=cutMesh.h;
-nodes=create_sets(cutMesh.dt,h);
-c=1;
-uConst=0;
-[M,A,L,u0,du0dt]=createSystem(cutMesh,nodes,c,waveNumber);
-cfl=0.1;
-domainWidth=diff(xLim);
-nMax=n;
-periodTime=2*pi/(waveNumber*c);
-nPeriods=2;
-T=periodTime*nPeriods;
-[dt,nSteps]=getnSteps(cfl,c,T,nMax,domainWidth);
-[u,dudt,t]=timeStepRK(u0,du0dt,A,M,L,nSteps,dt,c);
-u=convertToFull(u,nodes);
-dudt=convertToFull(dudt,nodes);
-saveName=['periodic_' '.mat'];
-save(saveName,'t','u','dudt','cutMesh','xLim','yLim','c',...
-    'dt','uConst');
+cutMesh=CutMesh(xLim,yMeshLim,n,XB,haveInnerProblem);
 end
 
 function[M,A,L,u0,du0dt]=createSystem(cutMesh,nodes,waveSpeed,waveNumber)
@@ -44,19 +63,15 @@ dirichletOuter=false;%Not used only for an outer problem.
 [MGlobal,AGlobal]=assemble(cutMesh,f,gD,dirichletInner,gD,dirichletOuter);
 M=makeMatrixPeriodic(MGlobal,nodes);
 A=makeMatrixPeriodic(AGlobal,nodes);
-[u0,du0dt]=setupInitialConditions(cutMesh,AGlobal,dirichletInner,...
-    dirichletOuter,nodes,waveSpeed,waveNumber);
+[u0,du0dt]=setupInitialConditions(cutMesh,...
+    nodes,waveSpeed,waveNumber);
 L=@(t) zeros(size(A,1),1);
 end
 
-function[u0,du0dt]=setupInitialConditions(cutMesh,A,dirichletInner,dirichletOuter,nodes,c,k)
+function[u0,du0dt]=setupInitialConditions(cutMesh,nodes,c,k)
 t=0;
 uAnaly=@(x,y) planeWave(x,y,t,k,c);
-% graduAnaly=@(x,y) gradPlaneWave(x,y,t,k,c);
 dudtAnaly=@(x,y) dplaneWavedt(x,y,t,k,c);
-% graddudtAnaly=@(x,y) dgradPlaneWavedt(x,y,t,k,c);
-% Au0=getAuRitz(cutMesh,uAnaly,graduAnaly,...
-%     dirichletInner,dirichletOuter);
 u0=uAnaly(cutMesh.dt.Points(:,1),cutMesh.dt.Points(:,2));
 du0dt=dudtAnaly(cutMesh.dt.Points(:,1),cutMesh.dt.Points(:,2));
 u0=removeRightBoundaryDofs(u0,nodes);
@@ -104,7 +119,9 @@ matrix(lowerIndices,lowerIndices)=...
     globalMatrix(nodes.rightBoundary,nodes.rightBoundary);
 end
 
-function[nodes]=create_sets(triangulation,h)
+function[nodes]=create_sets(cutMesh)
+h=cutMesh.h;
+triangulation=cutMesh.dt;
 eps=.1*h;
 freeBoundaryEdges=triangulation.freeBoundary;
 boundaryNodes=unique(freeBoundaryEdges(:));
@@ -127,4 +144,27 @@ toKeep=true(size(triangulation.Points,1),1);
 toKeep(rightBoundary)=false;
 toKeep(leftBoundary)=false;
 internalNodes=allNodes(toKeep);
+end
+
+function[uError,gradError,dudtError,boundaryError]=calculateErrors(...
+    cutMesh,uEnd,dudtEnd,xLim,yLim,uAnaly,dudtAnaly,graduAnaly)
+uConst=0;
+uInterpol=uInterpolator(cutMesh.dt,uEnd,dudtEnd,cutMesh.relevant,uConst);
+AbsTol=1E-3;
+RelTol=1E-2;
+%Error in u.
+integrand=@(x,y) (uAnaly(x,y)-uInterpol.evaluate(x,y)).^2;
+uError=sqrt(integral2(integrand,xLim(1),xLim(2),yLim(1),yLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
+%Error in dudt
+integranddudt=@(x,y) (dudtAnaly(x,y)-uInterpol.evaluatedudt(x,y)).^2;
+dudtError=sqrt(integral2(integranddudt,xLim(1),xLim(2),yLim(1),yLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
+%Error in grad
+gradIntegrand=@(x,y) gradDiffSq(x,y,graduAnaly,@(xx,yy) uInterpol.evaluategrad(xx,yy));
+gradError=sqrt(integral2(gradIntegrand,xLim(1),xLim(2),yLim(1),yLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
+%Calculate errors on the boundary
+normal=[0;1];
+upperLine=@(x) (uInterpol.evaluategrad(x,ones(size(x))*yLim(2))*normal ).^2;
+lowerLine=@(x) (uInterpol.evaluategrad(x,ones(size(x))*yLim(1))*normal ).^2;
+boundaryIntegrand=@(x) upperLine(x)'+lowerLine(x)';
+boundaryError=sqrt(integral(boundaryIntegrand,xLim(1),xLim(2),'AbsTol',AbsTol,'RelTol',RelTol));
 end
