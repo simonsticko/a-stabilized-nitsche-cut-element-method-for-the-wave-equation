@@ -1,4 +1,5 @@
-function[t,u,dudt,cutMesh,xLim,yLim]=halfperiodic(n,nMax,c,waveNumber,nPeriods,saveSolution)
+function[t,u,dudt,cutMesh,xLim,yLim]=halfperiodic(n,nMax,c,waveNumber,...
+    nPeriods,saveSolution)
 if(nargin<1)
     n=22;
     nMax=n;
@@ -24,7 +25,6 @@ if(saveSolution)
     saveName=['periodic_' '.mat'];
     save(saveName,'t','u','dudt','cutMesh','xLim','yLim','c',...
         'dt','uConst');
-else
 end
 end
 
