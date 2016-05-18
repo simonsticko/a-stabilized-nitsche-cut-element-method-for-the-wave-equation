@@ -46,7 +46,8 @@ saveSolution=false;
 waveNumber=2*pi/3;
 waveSpeed=1;
 nPeriods=1;
-[t,u,dudt,cutMesh,xLim,yLim]=halfperiodic(n,nMax,waveSpeed,waveNumber,nPeriods,saveSolution);
+problem=halfperiodic(n);
+[t,u,dudt]=problem.solve(waveNumber,nPeriods,nMax,saveSolution);
 endTime=max(t);
 uAnaly=@(x,y,t) planeWave(x,y,t,waveNumber,waveSpeed);
 dudtAnaly=@(x,y,t) dplaneWavedt(x,y,t,waveNumber,waveSpeed);
@@ -54,9 +55,9 @@ uAnalyticEnd=@(x,y) uAnaly(x,y,endTime);
 dudtAnalyticEnd=@(x,y) dudtAnaly(x,y,endTime);
 graduAnalyEnd=@(x,y) gradPlaneWave(x,y,endTime,waveNumber,waveSpeed);
 [uError,gradError,dudtError,boundaryError]=calculateErrors(...
-    cutMesh,u(:,end),dudt(:,end),xLim,yLim,...
+    problem.cutMesh,u(:,end),dudt(:,end),problem.xLim,problem.yLim,...
     uAnalyticEnd,dudtAnalyticEnd,graduAnalyEnd);
-h=cutMesh.h;
+h=problem.cutMesh.h;
 end
 
 function[uError,gradError,dudtError,boundaryError]=calculateErrors(...
