@@ -21,26 +21,44 @@ speedCenter=zeros(length(waveNumbers),1);
 speedBoundary=zeros(size(speedCenter));
 amplitudeCenter=zeros(length(waveNumbers),1);
 amplitudeBoundary=zeros(size(speedCenter));
+%Versions without stabilization
+speedCenterNoStab=zeros(length(waveNumbers),1);
+speedBoundaryNoStab=zeros(size(speedCenter));
+amplitudeCenterNoStab=zeros(length(waveNumbers),1);
+amplitudeBoundaryNoStab=zeros(size(speedCenter));
+%
+solveStabilized=@(waveNumber,endTime,n) problem.solve(waveNumber,endTime,n,false);
+solveUnStabilized=@(waveNumber,endTime,n) problem.solveWithoutStabilization(waveNumber,endTime,n,false);
+%Take each frequency independently.
 for i=1:length(waveNumbers)
-    [speedCenter(i),speedBoundary(i),amplitudeCenter(i),amplitudeBoundary(i)]=...
-        dispersionForWaveNumber(problem,nPointsInEachDirection,waveNumbers(i));
     disp(['i=' num2str(i)])
+    %Solve with stabilization.
+    [speedCenter(i),speedBoundary(i),amplitudeCenter(i),amplitudeBoundary(i)]=...
+        dispersionForWaveNumber(problem,nPointsInEachDirection,waveNumbers(i),solveStabilized);
+    %Solve without stabilization.
+    [speedCenterNoStab(i),speedBoundaryNoStab(i),amplitudeCenterNoStab(i),amplitudeBoundaryNoStab(i)]=...
+        dispersionForWaveNumber(problem,nPointsInEachDirection,waveNumbers(i),solveUnStabilized);
 end
 h=problem.cutMesh.gridPointDistance(1);
 omegah=problem.waveSpeed*waveNumbers*h;
-plotAndSaveWaveErrors(omegah,speedCenter,speedBoundary,folder);
+plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,...
+'$c_\xi$',folder);
+plotAndSave(omegah,amplitudeCenter,amplitudeBoundary,amplitudeCenterNoStab,amplitudeBoundaryNoStab,...
+'$\frac{A_\xi}{A}$',folder);
 end
 
-function[]=plotAndSaveWaveErrors(omegah,speedCenter,speedBoundary,folder)
+function[]=plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,yLabel,folder)
 fig=figure();
-plot(omegah,speedCenter,'bo',omegah,speedBoundary,'rx');
+plot(omegah,speedCenter,'bo',omegah,speedBoundary,'rx',...
+    omegah,speedCenterNoStab,'g+',omegah,speedBoundaryNoStab,'k^','linewidth',2);
 xlim([0 pi/2]);
 fontsize=16;
 set(gca(),'FontSize',fontsize)
-xlabel('$\xi$','interpreter','latex','FontSize',fontsize+4);
-ylabel('$c_\xi$','interpreter','latex','FontSize',fontsize+4);
-llegend=legend('$\mathcal{C}_1$','$\mathcal{C}_2$');
-llegend.set('interpreter','latex','FontSize',fontsize);
+xlabel('$\xi$','interpreter','latex','FontSize',fontsize+8);
+ylabel(yLabel,'interpreter','latex','FontSize',fontsize+8);
+llegend=legend('$\mathcal{C}_1$ stabilized','$\mathcal{C}_2$ stabilized',...
+    '$\mathcal{C}_1$ unstabilized','$\mathcal{C}_2$ unstabilized');
+llegend.set('interpreter','latex','FontSize',fontsize,'location','southWest');
 saveas(fig,[folder 'waveSpeeds'],'pdf');
 saveas(fig,[folder 'waveSpeeds'],'fig');
 end
@@ -53,16 +71,16 @@ intervalLength=diff(problem.xLim);
 waveNumbers=2*pi/intervalLength*nWavesToTest;
 end
 
-function[centerSpeed,boundarySpeed,centerAmplitude,boundaryAmplitude]=dispersionForWaveNumber(problem,n,waveNumber)
+function[centerSpeed,boundarySpeed,centerAmplitude,boundaryAmplitude]=...
+    dispersionForWaveNumber(problem,n,waveNumber,solveFunction)
 nPeriods=1;
-saveSolution=false;
 yGridSpacing=problem.cutMesh.gridPointDistance(2);
 heightAtCenter=mean(problem.yLim);
 heightAtBoundary=problem.yLim(1)+.25*yGridSpacing;
 xLim=problem.xLim;
 waveSpeed=problem.waveSpeed;
 endTime=nPeriods*diff(xLim)/waveSpeed;
-[t,u,dudt]=problem.solve(waveNumber,endTime,n,saveSolution);
+[t,u,dudt]=solveFunction(waveNumber,endTime,n);
 endTime=t(end);
 [startInterpolator,endInterpolator]=getInterpolators(u,dudt,problem.cutMesh);
 [centerSpeed,centerAmplitude]=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtCenter,endTime,waveSpeed);
@@ -83,7 +101,7 @@ x=linspace(xLim(1),xLim(end),nPoints);
 y=ones(size(x))*height;
 f1=startInterpolator.evaluate(x,y);
 f2=endInterpolator.evaluate(x,y);
-plot(x,f1,x,f2);
+% plot(x,f1,x,f2);
 xPeriod=diff(xLim);
 shift=computeSignalShift(f1,f2,xPeriod);
 numericalSpeed=exactSpeed+shift/endTime;

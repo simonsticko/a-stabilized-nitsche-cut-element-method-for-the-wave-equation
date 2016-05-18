@@ -24,6 +24,17 @@ classdef halfperiodic < handle
             dudt=halfperiodic.convertToFull(dudt,this.nodes);
             this.saveIfNecessary(saveSolution,t,u,dudt,dt)
         end
+        
+        function[t,u,dudt]=solveWithoutStabilization(this,waveNumber,endTime,nMax,saveSolution)
+            [u0,du0dt]=this.setupInitialConditions(waveNumber);
+            domainWidth=diff(this.xLim);
+            [dt,nSteps]=getnSteps(this.cfl,this.waveSpeed,endTime,nMax,domainWidth);
+            [u,dudt,t]=timeStepRK(u0,du0dt,this.a,this.m,this.L,...
+                nSteps,dt,this.waveSpeed);
+            u=halfperiodic.convertToFull(u,this.nodes);
+            dudt=halfperiodic.convertToFull(dudt,this.nodes);
+            this.saveIfNecessary(saveSolution,t,u,dudt,dt)
+        end
     end
     
     properties(Access=public)
@@ -36,6 +47,8 @@ classdef halfperiodic < handle
         M;
         A;
         L;
+        a;
+        m;
     end
     
     methods(Access=private)
@@ -72,9 +85,11 @@ classdef halfperiodic < handle
             f=@(x,y) zeros(size(x));
             dirichletInner=false;
             dirichletOuter=false;%Not used only for an outer problem.
-            [MGlobal,AGlobal]=assemble(this.cutMesh,f,gD,dirichletInner,gD,dirichletOuter);
+            [MGlobal,AGlobal,~,~,~,mGlobal,aGlobal]=assemble(this.cutMesh,f,gD,dirichletInner,gD,dirichletOuter);
             this.M=halfperiodic.makeMatrixPeriodic(MGlobal,this.nodes);
             this.A=halfperiodic.makeMatrixPeriodic(AGlobal,this.nodes);
+            this.m=halfperiodic.makeMatrixPeriodic(mGlobal,this.nodes);
+            this.a=halfperiodic.makeMatrixPeriodic(aGlobal,this.nodes);
             this.L=@(t) zeros(size(this.A,1),1);
         end
         

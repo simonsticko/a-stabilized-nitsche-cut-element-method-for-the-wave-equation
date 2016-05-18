@@ -8,7 +8,7 @@ path=['results/periodicProblem/convergence' folderName '/'];
 mkdir(path);
 %n is "fineness" in space want to start with the most computational heavy
 %simulation therefore flipud
-n=flipud(2.^(3:4)');
+n=flipud(2.^(3:7)');
 %Return error, want to save them.
 h=zeros(size(n));
 bcError=zeros(size(n));
