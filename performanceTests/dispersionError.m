@@ -19,8 +19,10 @@ problem=halfperiodic(nPointsInEachDirection);
 %boundary.
 speedCenter=zeros(length(waveNumbers),1);
 speedBoundary=zeros(size(speedCenter));
+amplitudeCenter=zeros(length(waveNumbers),1);
+amplitudeBoundary=zeros(size(speedCenter));
 for i=1:length(waveNumbers)
-    [speedCenter(i),speedBoundary(i)]=...
+    [speedCenter(i),speedBoundary(i),amplitudeCenter(i),amplitudeBoundary(i)]=...
         dispersionForWaveNumber(problem,nPointsInEachDirection,waveNumbers(i));
     disp(['i=' num2str(i)])
 end
@@ -51,7 +53,7 @@ intervalLength=diff(problem.xLim);
 waveNumbers=2*pi/intervalLength*nWavesToTest;
 end
 
-function[centerSpeed,boundarySpeed]=dispersionForWaveNumber(problem,n,waveNumber)
+function[centerSpeed,boundarySpeed,centerAmplitude,boundaryAmplitude]=dispersionForWaveNumber(problem,n,waveNumber)
 nPeriods=1;
 saveSolution=false;
 yGridSpacing=problem.cutMesh.gridPointDistance(2);
@@ -63,8 +65,8 @@ endTime=nPeriods*diff(xLim)/waveSpeed;
 [t,u,dudt]=problem.solve(waveNumber,endTime,n,saveSolution);
 endTime=t(end);
 [startInterpolator,endInterpolator]=getInterpolators(u,dudt,problem.cutMesh);
-centerSpeed=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtCenter,endTime,waveSpeed);
-boundarySpeed=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtBoundary,endTime,waveSpeed);
+[centerSpeed,centerAmplitude]=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtCenter,endTime,waveSpeed);
+[boundarySpeed,boundaryAmplitude]=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtBoundary,endTime,waveSpeed);
 end
 
 function[startInterpolator,endInterpolator]=...
@@ -74,7 +76,7 @@ startInterpolator=uInterpolator(cutMesh.dt,u(:,1),dudt(:,1),cutMesh.relevant,uCo
 endInterpolator=uInterpolator(cutMesh.dt,u(:,end),dudt(:,end),cutMesh.relevant,uConst);
 end
 
-function[numericalSpeed]=speedAtHeight(startInterpolator,endInterpolator,xLim,height,...
+function[numericalSpeed,amplitudeError]=speedAtHeight(startInterpolator,endInterpolator,xLim,height,...
 endTime,exactSpeed)
 nPoints=500;
 x=linspace(xLim(1),xLim(end),nPoints);
@@ -85,4 +87,9 @@ plot(x,f1,x,f2);
 xPeriod=diff(xLim);
 shift=computeSignalShift(f1,f2,xPeriod);
 numericalSpeed=exactSpeed+shift/endTime;
+%Since cos(x)^2+sin(x)^2=1, the integral of the f2^2 should be equal to
+%domainSize/2. So the root mean square should be equal 1/sqrt(2).
+domainSize=diff(xLim);
+analyticRMS=1/sqrt(2);
+amplitudeError=sqrt(trapz(x,f2.^2)/domainSize)/analyticRMS;
 end
