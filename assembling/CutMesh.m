@@ -6,6 +6,8 @@ classdef CutMesh<handle
         dt;
         %Mesh-size.
         h;
+        %distance between gridpoints: [dx,dy]
+        gridPointDistance;
         %matlab-cell of polygons representig the elements cut by the boundary.
         %Xcut{j} contains a polygon describing the cut element.
         %Xcut{j} is a m-by-2 matrix, m is either 4 or 3
@@ -121,6 +123,7 @@ classdef CutMesh<handle
         function[]=createBackgroundMesh(this,xlim,ylim,nx,ny)
             x=linspace(xlim(1),xlim(2),nx);
             y=linspace(ylim(1),ylim(2),ny);
+            this.gridPointDistance=[diff(x(1:2)), diff(y(1:2))];
             [Xm,Ym]=meshgrid(x,y);
             this.dt=delaunayTriangulation(Xm(:), Ym(:));
             %Mesh parameter, incircle diameter.

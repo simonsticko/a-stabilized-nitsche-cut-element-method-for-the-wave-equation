@@ -1,44 +1,70 @@
-%The dispersion error is typically not dependent on the grid size (the only
-%difference is that one can resolve higher frequencies with a finer grid),
-%thus we fix a grid. Then take a range of frequencies that can be resolved 
+%Take a range of frequencies that can be resolved 
 %on this grid and compare the dispersion errors at one line at the bottom
 %(straight through the first bottom row of elements)
 %where the stabilization has an effect and with the dispersion error at the
-%line straight through the center of the geomtery.
-%This would give a figure similar to Fig 1.1 in Gustafsson 
-%(doi:10.1007/978-3-540-74993-6), with two lines.
+%line straight through the center of the geomtery. Then plot how the
+%speeds depend on frequency.
 function[]=dispersionError()
 close all;
-
-
-nFrequencies=50;
-omegah=linspace(0,pi,nFrequencies+2);
-omegah=omegah(2:end-1);
-n=50;
-problem=halfperiodic(n);
-h=diff(problem.xLim)/(n-1);
-waveNumbersToTest=omegah/h;
-
-speed=zeros(length(waveNumbersToTest),1);
-for i=1:length(waveNumbersToTest)
-    speed(i)=dispersionForWaveNumber(problem,n,waveNumbersToTest(i));
+cclock=clock();
+folderName=[num2str(cclock(2)) '_' num2str(cclock(3)) '_' ...
+    num2str(cclock(4)) '_' num2str(cclock(5))];
+folder=['results/dispersionErrors/' folderName '/'];
+mkdir(folder);
+%nRefinements should be an odd number.
+nPointsInEachDirection=31;
+problem=halfperiodic(nPointsInEachDirection);
+[waveNumbers]=getWaveNumbersToTest(problem,nPointsInEachDirection);
+%Test each frequency and measure the wavespeed at center and at the
+%boundary.
+speedCenter=zeros(length(waveNumbers),1);
+speedBoundary=zeros(size(speedCenter));
+for i=1:length(waveNumbers)
+    [speedCenter(i),speedBoundary(i)]=...
+        dispersionForWaveNumber(problem,nPointsInEachDirection,waveNumbers(i));
     disp(['i=' num2str(i)])
 end
-plot(omegah,speed,'o');
-xlim([0 pi]);
-ylim([0 problem.waveSpeed]);
+h=problem.cutMesh.gridPointDistance(1);
+omegah=problem.waveSpeed*waveNumbers*h;
+plotAndSaveWaveErrors(omegah,speedCenter,speedBoundary,folder);
 end
 
-function[numericalSpeed]=dispersionForWaveNumber(problem,n,waveNumber)
-nPeriods=2;
+function[]=plotAndSaveWaveErrors(omegah,speedCenter,speedBoundary,folder)
+fig=figure();
+plot(omegah,speedCenter,'bo',omegah,speedBoundary,'rx');
+xlim([0 pi/2]);
+fontsize=16;
+set(gca(),'FontSize',fontsize)
+xlabel('$\xi$','interpreter','latex','FontSize',fontsize+4);
+ylabel('$c_\xi$','interpreter','latex','FontSize',fontsize+4);
+llegend=legend('$\mathcal{C}_1$','$\mathcal{C}_2$');
+llegend.set('interpreter','latex','FontSize',fontsize);
+saveas(fig,[folder 'waveSpeeds'],'pdf');
+saveas(fig,[folder 'waveSpeeds'],'fig');
+end
+
+function[waveNumbers]=getWaveNumbersToTest(problem,nPointsInEachDirection)
+highestNumberOfWaves=(nPointsInEachDirection-1)/2;
+allWaves=1:highestNumberOfWaves;
+nWavesToTest=allWaves(1:6);
+intervalLength=diff(problem.xLim);
+waveNumbers=2*pi/intervalLength*nWavesToTest;
+end
+
+function[centerSpeed,boundarySpeed]=dispersionForWaveNumber(problem,n,waveNumber)
+nPeriods=1;
 saveSolution=false;
-height=mean(problem.yLim);
+yGridSpacing=problem.cutMesh.gridPointDistance(2);
+heightAtCenter=mean(problem.yLim);
+heightAtBoundary=problem.yLim(1)+.25*yGridSpacing;
 xLim=problem.xLim;
 waveSpeed=problem.waveSpeed;
-[t,u,dudt]=problem.solve(waveNumber,nPeriods,n,saveSolution);
+endTime=nPeriods*diff(xLim)/waveSpeed;
+[t,u,dudt]=problem.solve(waveNumber,endTime,n,saveSolution);
 endTime=t(end);
 [startInterpolator,endInterpolator]=getInterpolators(u,dudt,problem.cutMesh);
-numericalSpeed=speedAtHeight(startInterpolator,endInterpolator,xLim,height,endTime,waveSpeed);
+centerSpeed=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtCenter,endTime,waveSpeed);
+boundarySpeed=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtBoundary,endTime,waveSpeed);
 end
 
 function[startInterpolator,endInterpolator]=...

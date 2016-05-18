@@ -51,7 +51,7 @@ close(videoObj);
 end
 
 function[fig1,videoObj]=setupForPlotting(videoName)
-close all;
+% close all;
 fig1=figure(1);
 a = axes('Parent',fig1);
 axis(a,'tight');
