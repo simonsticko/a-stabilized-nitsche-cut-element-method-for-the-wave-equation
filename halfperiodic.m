@@ -14,10 +14,8 @@ classdef halfperiodic < handle
 
         end
         
-        function[t,u,dudt]=solve(this,waveNumber,nPeriods,nMax,saveSolution)
+        function[t,u,dudt]=solve(this,waveNumber,endTime,nMax,saveSolution)
             [u0,du0dt]=this.setupInitialConditions(waveNumber);
-            periodTime=2*pi/(waveNumber*this.waveSpeed);
-            endTime=periodTime*nPeriods;
             domainWidth=diff(this.xLim);
             [dt,nSteps]=getnSteps(this.cfl,this.waveSpeed,endTime,nMax,domainWidth);
             [u,dudt,t]=timeStepRK(u0,du0dt,this.A,this.M,this.L,...
