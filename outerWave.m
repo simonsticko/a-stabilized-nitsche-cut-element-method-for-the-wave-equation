@@ -19,7 +19,7 @@ if(0==nargin)
     ssave=true;
 end
 addpath assembling/;
-addpath analyticFunctions/planeWave;
+addpath analyticFunctions/graffWave;
 addpath errorCalculation/;
 dirichletInner=false;
 dirichletOuter=true;
