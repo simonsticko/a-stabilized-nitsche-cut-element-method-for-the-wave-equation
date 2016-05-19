@@ -50,7 +50,7 @@ end
 function[]=plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,yLabel,folder,name)
 fig=figure();
 plot(omegah,speedCenter,'bo',omegah,speedBoundary,'rx',...
-    omegah,speedCenterNoStab,'g+',omegah,speedBoundaryNoStab,'k^','linewidth',2);
+    omegah,speedCenterNoStab,'m+',omegah,speedBoundaryNoStab,'k^','linewidth',2);
 xlim([0 pi/2]);
 fontsize=16;
 set(gca(),'FontSize',fontsize)
