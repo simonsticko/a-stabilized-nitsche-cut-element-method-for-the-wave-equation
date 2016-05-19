@@ -17,7 +17,11 @@ gammaD=5;
 gammaN=5;
 AuInside=getAuInside(cutMesh,gradu0Analy);
 [AuInter]=getAuInters(cutMesh,gradu0Analy,u0Analy,gammaD,gammaN,dirichletInner);
-[AuOut]=getAuBOuter(cutMesh,gradu0Analy,u0Analy,gammaD,gammaN,dirichletOuter);
+if(cutMesh.haveInnerProb)
+    AuOut=0;
+else
+    [AuOut]=getAuBOuter(cutMesh,gradu0Analy,u0Analy,gammaD,gammaN,dirichletOuter);
+end
 Au=AuInside+AuInter+AuOut;
 Au=Au(cutMesh.relevant);
 end

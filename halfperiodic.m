@@ -49,6 +49,7 @@ classdef halfperiodic < handle
         L;
         a;
         m;
+        lagrange;
     end
     
     methods(Access=private)
@@ -85,22 +86,35 @@ classdef halfperiodic < handle
             f=@(x,y) zeros(size(x));
             dirichletInner=false;
             dirichletOuter=false;%Not used only for an outer problem.
-            [MGlobal,AGlobal,~,~,~,mGlobal,aGlobal]=assemble(this.cutMesh,f,gD,dirichletInner,gD,dirichletOuter);
+            [MGlobal,AGlobal,~,~,lagrangeGlobal,mGlobal,aGlobal]=assemble(this.cutMesh,f,gD,dirichletInner,gD,dirichletOuter);
             this.M=halfperiodic.makeMatrixPeriodic(MGlobal,this.nodes);
             this.A=halfperiodic.makeMatrixPeriodic(AGlobal,this.nodes);
             this.m=halfperiodic.makeMatrixPeriodic(mGlobal,this.nodes);
             this.a=halfperiodic.makeMatrixPeriodic(aGlobal,this.nodes);
+            this.lagrange=[lagrangeGlobal(this.nodes.internal);lagrangeGlobal(this.nodes.rightBoundary)+...
+                lagrangeGlobal(this.nodes.leftBoundary)];
             this.L=@(t) zeros(size(this.A,1),1);
         end
         
         function[u0,du0dt]=setupInitialConditions(this,waveNumber)
             t=0;
+            %Analytic functions
             uAnaly=@(x,y) planeWave(x,y,t,waveNumber,this.waveSpeed);
+            graduAnaly=@(x,y) gradPlaneWave(x,y,t,waveNumber,this.waveSpeed);
+            graddudtAnaly=@(x,y) dgradPlaneWavedt(x,y,t,waveNumber,this.waveSpeed);
             dudtAnaly=@(x,y) dplaneWavedt(x,y,t,waveNumber,this.waveSpeed);
-            u0=uAnaly(this.cutMesh.dt.Points(:,1),this.cutMesh.dt.Points(:,2));
-            du0dt=dudtAnaly(this.cutMesh.dt.Points(:,1),this.cutMesh.dt.Points(:,2));
-            u0=halfperiodic.removeRightBoundaryDofs(u0,this.nodes);
-            du0dt=halfperiodic.removeRightBoundaryDofs(du0dt,this.nodes);
+            %Ritz-project initial conditions.
+            AwithLagrange=[this.A this.lagrange;this.lagrange' 0];
+            [u0]=this.RitzProject(uAnaly,graduAnaly,AwithLagrange);
+            [du0dt]=this.RitzProject(dudtAnaly,graddudtAnaly,AwithLagrange);
+        end
+        
+        function[u0]=RitzProject(this,uAnaly,graduAnaly,AwithLagrange)
+            dirichlet=false;
+            Au0=getAuRitz(this.cutMesh,uAnaly,graduAnaly,dirichlet);
+            Au0=[Au0(this.nodes.internal); Au0(this.nodes.leftBoundary)+Au0(this.nodes.rightBoundary)];
+            u0WithMultiplier=AwithLagrange\[Au0; 0];
+            u0=u0WithMultiplier(1:end-1);
         end
     end
     
