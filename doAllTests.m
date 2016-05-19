@@ -10,5 +10,5 @@ membraneConvergence();
 foldername=sliverTimeStep();
 processtimestep(foldername);
 domainDepedenceGammaM();
-outerProblConvergence();
+convergencePeriodicProblem();
 dispersionError();
