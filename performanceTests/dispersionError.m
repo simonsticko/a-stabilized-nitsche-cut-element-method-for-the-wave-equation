@@ -42,12 +42,12 @@ end
 h=problem.cutMesh.gridPointDistance(1);
 omegah=problem.waveSpeed*waveNumbers*h;
 plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,...
-'$c_\xi$',folder);
+'$c_\xi$',folder,'waveSpeed');
 plotAndSave(omegah,amplitudeCenter,amplitudeBoundary,amplitudeCenterNoStab,amplitudeBoundaryNoStab,...
-'$\frac{A_\xi}{A}$',folder);
+'$\frac{A_\xi}{A}$',folder,'amplitudes');
 end
 
-function[]=plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,yLabel,folder)
+function[]=plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,yLabel,folder,name)
 fig=figure();
 plot(omegah,speedCenter,'bo',omegah,speedBoundary,'rx',...
     omegah,speedCenterNoStab,'g+',omegah,speedBoundaryNoStab,'k^','linewidth',2);
@@ -59,8 +59,9 @@ ylabel(yLabel,'interpreter','latex','FontSize',fontsize+8);
 llegend=legend('$\mathcal{C}_1$ stabilized','$\mathcal{C}_2$ stabilized',...
     '$\mathcal{C}_1$ unstabilized','$\mathcal{C}_2$ unstabilized');
 llegend.set('interpreter','latex','FontSize',fontsize,'location','southWest');
-saveas(fig,[folder 'waveSpeeds'],'pdf');
-saveas(fig,[folder 'waveSpeeds'],'fig');
+fixPaperSize();
+saveas(fig,[folder name],'pdf');
+saveas(fig,[folder name],'fig');
 end
 
 function[waveNumbers]=getWaveNumbersToTest(problem,nPointsInEachDirection)
