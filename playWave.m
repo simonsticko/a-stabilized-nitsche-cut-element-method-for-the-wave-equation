@@ -34,7 +34,7 @@ for j=1:length(toPlot)
     axis off;
     caxis(ccaxis);
     view(vview);
-    title(['t=' sprintf('%.2f',t(toPlot(j)))],'FontSize',52)
+    title(['$' 't=' sprintf('%.2f',t(toPlot(j))) '$'],'FontSize',48,'interpreter','latex')
     subplot(1,2,2);
     surfWrap(cutMesh,dudt(:,toPlot(j)),0);
     axis(dudtaxis);
