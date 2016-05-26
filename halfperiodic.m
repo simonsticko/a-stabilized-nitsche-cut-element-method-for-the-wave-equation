@@ -118,6 +118,17 @@ classdef halfperiodic < handle
         end
     end
     
+    methods(Access=public,Static)
+                
+        function[u]=removeRightBoundaryDofs(u,nodes)
+            nInternalNodes=length(nodes.internal);
+            nBoundaryNodes=length(nodes.leftBoundary);
+            assert(length(u)==nInternalNodes+2*nBoundaryNodes);
+            u=[u(nodes.internal);u(nodes.leftBoundary)];
+        end
+        
+    end
+    
     methods(Access=private,Static)    
         function[uFull]=convertToFull(u,nodes)
             nInternalNodes=length(nodes.internal);
@@ -132,13 +143,6 @@ classdef halfperiodic < handle
             uFull(nodes.internal,:)=u(internalIndices,:);
             uFull(nodes.leftBoundary,:)=u(boundaryIndices,:);
             uFull(nodes.rightBoundary,:)=u(boundaryIndices,:);
-        end
-        
-        function[u]=removeRightBoundaryDofs(u,nodes)
-            nInternalNodes=length(nodes.internal);
-            nBoundaryNodes=length(nodes.leftBoundary);
-            assert(length(u)==nInternalNodes+2*nBoundaryNodes);
-            u=[u(nodes.internal);u(nodes.leftBoundary)];
         end
         
         function[matrix]=makeMatrixPeriodic(globalMatrix,nodes)

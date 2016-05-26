@@ -26,6 +26,7 @@ speedCenterNoStab=zeros(length(waveNumbers),1);
 speedBoundaryNoStab=zeros(size(speedCenter));
 amplitudeCenterNoStab=zeros(length(waveNumbers),1);
 amplitudeBoundaryNoStab=zeros(size(speedCenter));
+energyRatioStab=zeros(size(speedCenter));
 %
 solveStabilized=@(waveNumber,endTime,n) problem.solve(waveNumber,endTime,n,false);
 solveUnStabilized=@(waveNumber,endTime,n) problem.solveWithoutStabilization(waveNumber,endTime,n,false);
@@ -33,7 +34,7 @@ solveUnStabilized=@(waveNumber,endTime,n) problem.solveWithoutStabilization(wave
 for i=1:length(waveNumbers)
     disp(['i=' num2str(i)])
     %Solve with stabilization.
-    [speedCenter(i),speedBoundary(i),amplitudeCenter(i),amplitudeBoundary(i)]=...
+    [speedCenter(i),speedBoundary(i),amplitudeCenter(i),amplitudeBoundary(i),energyRatioStab(i)]=...
         dispersionForWaveNumber(problem,nPointsInEachDirection,waveNumbers(i),solveStabilized);
     %Solve without stabilization.
     [speedCenterNoStab(i),speedBoundaryNoStab(i),amplitudeCenterNoStab(i),amplitudeBoundaryNoStab(i)]=...
@@ -45,6 +46,7 @@ plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoSt
 '$c_\xi$',folder,'waveSpeed');
 plotAndSave(omegah,amplitudeCenter,amplitudeBoundary,amplitudeCenterNoStab,amplitudeBoundaryNoStab,...
 '$\frac{A_\xi}{A}$',folder,'amplitudes');
+plotEnergy(omegah,energyRatioStab,folder);
 end
 
 function[]=plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,yLabel,folder,name)
@@ -64,6 +66,19 @@ saveas(fig,[folder name],'pdf');
 saveas(fig,[folder name],'fig');
 end
 
+function[]=plotEnergy(omegah,energy,folder)
+fig=figure();
+plot(omegah,energy,'o','linewidth',2);
+fontsize=16;
+set(gca(),'FontSize',fontsize)
+xlabel('$\xi$','interpreter','latex','FontSize',fontsize+8);
+ylabel('$\frac{E(T)}{E(0)}$','interpreter','latex','FontSize',fontsize+8);
+fixPaperSize();
+name='EnergyRatio';
+saveas(fig,[folder name],'pdf');
+saveas(fig,[folder name],'fig');
+end
+
 function[waveNumbers]=getWaveNumbersToTest(problem,nPointsInEachDirection)
 highestNumberOfWaves=(nPointsInEachDirection-1)/2;
 allWaves=1:highestNumberOfWaves;
@@ -72,7 +87,7 @@ intervalLength=diff(problem.xLim);
 waveNumbers=2*pi/intervalLength*nWavesToTest;
 end
 
-function[centerSpeed,boundarySpeed,centerAmplitude,boundaryAmplitude]=...
+function[centerSpeed,boundarySpeed,centerAmplitude,boundaryAmplitude,energyRatio]=...
     dispersionForWaveNumber(problem,n,waveNumber,solveFunction)
 nPeriods=1;
 yGridSpacing=problem.cutMesh.gridPointDistance(2);
@@ -86,7 +101,18 @@ endTime=t(end);
 [startInterpolator,endInterpolator]=getInterpolators(u,dudt,problem.cutMesh);
 [centerSpeed,centerAmplitude]=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtCenter,endTime,waveSpeed);
 [boundarySpeed,boundaryAmplitude]=speedAtHeight(startInterpolator,endInterpolator,xLim,heightAtBoundary,endTime,waveSpeed);
+%Compute drop in energy
+startEnergy=computeEnergy(problem,u(:,1),dudt(:,1));
+endEnergy=computeEnergy(problem,u(:,end),dudt(:,end));
+energyRatio=endEnergy/startEnergy;
 end
+
+ %Return the energy for the stabilized system.
+ function[energy]=computeEnergy(problem,u,dudt)
+ u=problem.removeRightBoundaryDofs(u,problem.nodes);
+ dudt=problem.removeRightBoundaryDofs(dudt,problem.nodes);
+ energy=dudt'*problem.M*dudt+u'*problem.A*u;
+ end
 
 function[startInterpolator,endInterpolator]=...
     getInterpolators(u,dudt,cutMesh)
