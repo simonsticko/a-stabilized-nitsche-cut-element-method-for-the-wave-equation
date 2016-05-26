@@ -45,7 +45,7 @@ omegah=problem.waveSpeed*waveNumbers*h;
 plotAndSave(omegah,speedCenter,speedBoundary,speedCenterNoStab,speedBoundaryNoStab,...
 '$c_\xi$',folder,'waveSpeed');
 plotAndSave(omegah,amplitudeCenter,amplitudeBoundary,amplitudeCenterNoStab,amplitudeBoundaryNoStab,...
-'$\frac{A_\xi}{A}$',folder,'amplitudes');
+'$\frac{A(T)}{A(0)}$',folder,'amplitudes');
 plotEnergy(omegah,energyRatioStab,folder);
 end
 
@@ -136,5 +136,6 @@ numericalSpeed=exactSpeed+shift/endTime;
 %domainSize/2. So the root mean square should be equal 1/sqrt(2).
 domainSize=diff(xLim);
 analyticRMS=1/sqrt(2);
-amplitudeError=sqrt(trapz(x,f2.^2)/domainSize)/analyticRMS;
+startAmplitude=sqrt(trapz(x,f1.^2)/domainSize);
+amplitudeError=sqrt(trapz(x,f2.^2)/domainSize)/startAmplitude;
 end
